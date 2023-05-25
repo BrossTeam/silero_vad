@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
 project(silero_vad VERSION 0.1)
+
 include(FetchContent)
 set(FETCHCONTENT_QUIET OFF)
 get_filename_component(fc_base
@@ -29,7 +30,7 @@ include(glog)
 include(rnnoise)
 include(onnx)
 
-add_subdirectory(front_vad)
+add_subdirectory(frontend)
 add_subdirectory(vad)
 add_executable(vad_main bin/vad_main.cc)
 target_link_libraries(vad_main PUBLIC vad gflags)
