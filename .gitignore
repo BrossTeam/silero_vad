@@ -398,6 +398,6 @@ FodyWeavers.xsd
 *.sln.iml
 
 # generated systems
-.fc_base-Clang/*
-.fc_base-MSVC/*
+fc_base-Clang/*
+fc_base-MSVC/*
 
