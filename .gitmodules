@@ -1,0 +1,6 @@
+[submodule "noise-suppression-for-voice"]
+	path = noise-suppression-for-voice
+	url = https://github.com/werman/noise-suppression-for-voice.git
+[submodule "libsamplerate"]
+	path = libsamplerate
+	url = https://github.com/libsndfile/libsamplerate.git

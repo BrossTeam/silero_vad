@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "frontend/denoiser.h"
+#include "front_vad/denoiser.h"
 
 void Denoiser::Denoise(const std::vector<float>& in_pcm,
                        std::vector<float>* out_pcm) {

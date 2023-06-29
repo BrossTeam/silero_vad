@@ -12,33 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef FRONTEND_DENOISER_H_
-#define FRONTEND_DENOISER_H_
+#ifndef FRONTEND_RESAMPLER_H_
+#define FRONTEND_RESAMPLER_H_
 
 #include <memory>
 #include <vector>
 
 #include "glog/logging.h"
-#include "rnnoise/rnnoise.h"
+#include "libsamplerate/include/samplerate.h"
 
-#include "frontend/sample_queue.h"
-
-#define FRAME_SIZE 480  // According to rnnoise/src/denoise.c
-
-class Denoiser {
+class Resampler {
  public:
-  explicit Denoiser() {
-    st_.reset(rnnoise_create());
-    sample_queue_ = std::make_shared<SampleQueue>();
-  };
+  explicit Resampler(int converter = SRC_SINC_BEST_QUALITY)
+      : converter_(converter) {
+    src_data_ = std::make_shared<SRC_DATA>();
+  }
 
-  void Reset() { sample_queue_->Clear(); };
-
-  void Denoise(const std::vector<float>& in_pcm, std::vector<float>* out_pcm);
+  void Resample(int in_sr, const std::vector<float>& in_pcm, int out_sr,
+                std::vector<float>* out_pcm);
 
  private:
-  std::shared_ptr<DenoiseState> st_ = nullptr;
-  std::shared_ptr<SampleQueue> sample_queue_ = nullptr;
+  int converter_;
+  std::shared_ptr<SRC_DATA> src_data_;
 };
 
-#endif  // FRONTEND_DENOISER_H_
+#endif  // FRONTEND_RESAMPLER_H_

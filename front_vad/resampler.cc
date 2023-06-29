@@ -12,28 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef FRONTEND_RESAMPLER_H_
-#define FRONTEND_RESAMPLER_H_
+#include "front_vad/resampler.h"
 
-#include <memory>
-#include <vector>
+void Resampler::Resample(int in_sr, const std::vector<float>& in_pcm,
+                         int out_sr, std::vector<float>* out_pcm) {
+  float ratio = 1.0 * out_sr / in_sr;
+  out_pcm->resize(in_pcm.size() * ratio);
 
-#include "glog/logging.h"
-#include "samplerate.h"
+  src_data_->src_ratio = ratio;
+  src_data_->data_in = in_pcm.data();
+  src_data_->input_frames = in_pcm.size();
+  src_data_->data_out = out_pcm->data();
+  src_data_->output_frames = out_pcm->size();
 
-class Resampler {
- public:
-  explicit Resampler(int converter = SRC_SINC_BEST_QUALITY)
-      : converter_(converter) {
-    src_data_ = std::make_shared<SRC_DATA>();
+  int error = src_simple(src_data_.get(), converter_, 1);
+  if (error != 0) {
+    LOG(FATAL) << "src_simple error: " << src_strerror(error);
   }
-
-  void Resample(int in_sr, const std::vector<float>& in_pcm, int out_sr,
-                std::vector<float>* out_pcm);
-
- private:
-  int converter_;
-  std::shared_ptr<SRC_DATA> src_data_;
-};
-
-#endif  // FRONTEND_RESAMPLER_H_
+}

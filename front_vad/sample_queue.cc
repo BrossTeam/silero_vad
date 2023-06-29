@@ -26,7 +26,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "frontend/sample_queue.h"
+#include "front_vad/sample_queue.h"
 
 void SampleQueue::AcceptWaveform(const std::vector<float>& pcm) {
   for (auto p : pcm) {
