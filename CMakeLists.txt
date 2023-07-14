@@ -21,7 +21,7 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/${ONNX_PACKAGE_NAME}")
     file(REMOVE "${CMAKE_CURRENT_SOURCE_DIR}/external/${ONNX_PACKAGE_NAME}.zip")
     
 else()
-    message(STATUS "Package already exists. Skipping download.")
+    message(STATUS "ONNX package already exists. Skipping download.")
 endif()
 
 # this project uses different versions of submodules please reffer to https://github.com/pengzhendong/silero-vad/tree/master/src/cmake

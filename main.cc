@@ -5,9 +5,16 @@
 #include "front_vad/wav.h"
 #include "vad/vad_model.h"
 
-DEFINE_string(wav_path, "D:/Git/silero_vad/data/test_16k.wav", "wav path");
+#include <iostream>
+
+DEFINE_string(wav_path, "C:/Users/novel/Documents/Sound Recordings/[MONO]-Recording.wav", "wav path");
 DEFINE_double(threshold, 0.5, "threshold of voice activity detection");
-DEFINE_string(model_path, "D:/Git/silero_vad/data/silero_vad.onnx", "voice activity detection model path");
+DEFINE_string(model_path, "data/silero_vad.onnx", "voice activity detection model path");
+
+int dataset_test()
+{
+    
+}
 
 int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, false);
@@ -38,6 +45,7 @@ int main(int argc, char* argv[]) {
         stop_pos.emplace_back(dur);
     }
     for (int i = 0; i < start_pos.size(); i++) {
-        LOG(INFO) << "[" << start_pos[i] << ", " << stop_pos[i] << "]s";
+        std::cout << "[" << start_pos[i] << ", " << stop_pos[i] << "]s"
+                  << "\n";
     }
 }

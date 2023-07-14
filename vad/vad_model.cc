@@ -2,17 +2,20 @@
 
 #include "glog/logging.h"
 
+#include <iostream>
+
 VadModel::VadModel(const std::string& model_path, bool denoise, int sample_rate,
-    float threshold, float min_sil_dur, float speech_pad)
+                   float threshold, float min_sil_dur, float speech_pad, int ms_chunk_size)
     : OnnxModel(model_path),
     denoise_(denoise),
     sample_rate_(sample_rate),
-    threshold_(threshold),
+    threshold(threshold),
     min_sil_dur_(min_sil_dur),
     speech_pad_(speech_pad) {
     denoiser_ = std::make_shared<Denoiser>();
     resampler_ = std::make_shared<Resampler>();
     sample_queue_ = std::make_shared<SampleQueue>();
+    frame_rt_size = ms_chunk_size * (16000 / 1000);
     Reset();
 }
 
@@ -23,16 +26,13 @@ void VadModel::Reset() {
     std::memset(c_.data(), 0.0f, SIZE_HC * sizeof(float));
     on_speech_ = false;
     temp_stop_ = 0;
-    current_pos_ = 0;
+    pos_iterator = 0;
     sample_queue_->Clear();
     denoiser_->Reset();
 }
 
 float VadModel::Forward(const std::vector<float>& pcm) {
     std::vector<float> input_pcm{ pcm.data(), pcm.data() + pcm.size() };
-    for (int i = 0; i < input_pcm.size(); i++) {
-        input_pcm[i] /= 32768.0;
-    }
 
     // batch_size * num_samples
     const int64_t batch_size = 1;
@@ -95,16 +95,17 @@ float VadModel::Vad(const std::vector<float>& pcm,
     int frame_ms = 64;
     int frame_size = frame_ms * (16000 / 1000);
     int num_frames = sample_queue_->NumSamples() / frame_size;
-
+    
     for (int i = 0; i < num_frames; i++) {
         sample_queue_->Read(frame_size, &in_pcm);
+
         float posterier = Forward(in_pcm);
         // 1. start
-        if (posterier >= threshold_) {
+        if (posterier >= threshold) {
             temp_stop_ = 0;
             if (on_speech_ == false) {
                 on_speech_ = true;
-                float start = current_pos_ - speech_pad_;
+                float start = pos_iterator - speech_pad_;
                 if (start < 0) {
                     start = 0;
                 }
@@ -112,19 +113,77 @@ float VadModel::Vad(const std::vector<float>& pcm,
             }
         }
         // 2. stop
-        if (posterier < (threshold_ - 0.15) && on_speech_ == true) {
+        if (posterier < (threshold - 0.15) && on_speech_ == true) {
             if (temp_stop_ == 0) {
-                temp_stop_ = current_pos_;
+                temp_stop_ = pos_iterator;
             }
             // hangover
-            if (current_pos_ - temp_stop_ >= min_sil_dur_) {
+            if (pos_iterator - temp_stop_ >= min_sil_dur_) {
                 temp_stop_ = 0;
                 on_speech_ = false;
-                float stop = current_pos_ + speech_pad_;
+                float stop = pos_iterator + speech_pad_;
                 stop_pos->emplace_back(round(stop * 1000) / 1000);
             }
         }
-        current_pos_ += 1.0 * in_pcm.size() / sample_rate_;
+        pos_iterator += 1.0 * in_pcm.size() / sample_rate_;
     }
-    return current_pos_;
+    return pos_iterator;
+}
+
+VadModel::VadState VadModel::VadRealtime(const std::vector<float> &pcm)
+{
+    std::vector<float> in_pcm{pcm.data(), pcm.data() + pcm.size()};
+    if (denoise_)
+    {
+        std::vector<float> resampled_pcm;
+        std::vector<float> denoised_pcm;
+        // 0. Upsample to 48k for RnNoise
+        if (sample_rate_ != 48000)
+        {
+            resampler_->Resample(sample_rate_, in_pcm, 48000, &resampled_pcm);
+            in_pcm = resampled_pcm;
+        }
+        // 1. Denoise with RnNoise
+        denoiser_->Denoise(in_pcm, &denoised_pcm);
+        in_pcm = denoised_pcm;
+        // 2. Downsample to 16k for VAD
+        resampler_->Resample(48000, in_pcm, 16000, &resampled_pcm);
+        sample_rate_ = 16000;
+        in_pcm = resampled_pcm;
+    }
+    sample_queue_->AcceptWaveform(in_pcm);
+
+    // Support 512 1024 1536 samples for 16k
+    float posterier = 0;
+    pos_iterator += 1;
+    if (sample_queue_->Read(frame_rt_size, &in_pcm))
+        posterier = Forward(in_pcm);
+    else return VadState(ERR, 0);
+    // 1. start
+    if (posterier >= threshold)
+    {
+        if (on_speech_ == false)
+        {
+            on_speech_ = true;
+            float start = pos_iterator;
+            last_start = pos_iterator;
+            //start_rt_pos->emplace_back(start);
+            return VadState(START, posterier);
+        }
+        return VadState(ON, posterier);
+    }
+
+    // 2. stop
+    if (posterier < (threshold - 0.15) && on_speech_ == true)
+    {
+        on_speech_ = false;
+        last_stop = pos_iterator;
+        float stop = pos_iterator;
+        //stop_rt_pos->emplace_back(stop);
+        return VadState(STOP, posterier);
+    }
+    if (on_speech_)
+        return VadState(ON, posterier);
+    else
+        return VadState(OFF, posterier);
 }
