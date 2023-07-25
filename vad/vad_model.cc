@@ -1,6 +1,5 @@
 #include "vad/vad_model.h"
 
-#include "tracer.hpp"
 #include "glog/logging.h"
 
 #include <iostream>
@@ -133,7 +132,6 @@ float VadModel::Vad(const std::vector<float>& pcm,
 
 VadModel::VadState VadModel::VadRealtime(const std::vector<float> &pcm)
 {
-    ZONE;
     std::vector<float> in_pcm{pcm.data(), pcm.data() + pcm.size()};
     if (denoise_)
     {

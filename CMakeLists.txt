@@ -62,7 +62,7 @@ add_executable(${TEST_TARGET} "main.cc")
 target_include_directories(${TARGET} PUBLIC .)
 target_include_directories(${TARGET} PUBLIC ${ONNXRUNTIME_INCLUDE_DIR})
 
-target_link_libraries(${TARGET} gflags::gflags glog::glog RnNoise samplerate benchmark ${ONNXRUNTIME_LIBRARY})
+target_link_libraries(${TARGET} gflags::gflags glog::glog RnNoise samplerate ${ONNXRUNTIME_LIBRARY})
 target_link_libraries(${TEST_TARGET} ${TARGET})
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
