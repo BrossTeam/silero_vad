@@ -40,8 +40,8 @@ public:
     float threshold;
 
     // funcs
-    VadModel(const std::string& model_path, bool denoise, int sample_rate,
-        float threshold, float min_sil_dur, float speech_pad, int ms_chunk_size);
+    VadModel(const std::string &model_path = "data/silero_vad.onnx", bool denoise = true, int sample_rate = 16000,
+             float threshold = 0.5, float min_sil_dur = 0, float speech_pad = 0, int ms_chunk_size = 32);
 
     void Reset();
     float Vad(const std::vector<float>& pcm, std::vector<float>* start_pos,
