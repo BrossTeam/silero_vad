@@ -51,24 +51,25 @@ public:
 
 private:
 
-    bool denoise_ = false;
-    int sample_rate_;
-    float min_sil_dur_;
-    float speech_pad_;
-    int last_start;
-    int last_stop;
+    bool _denoise = false;
+    int _sample_rate;
+    float _min_sil_dur;
+    float _speech_pad;
+    int _last_start;
+    int _last_stop;
+    int _current_pad;
 
     // model states
-    bool on_speech_ = false;
-    float temp_stop_ = 0;
+    bool _on_speech = false;
+    float _temp_stop = 0;
 
     // Onnx model
-    std::vector<float> h_;
-    std::vector<float> c_;
+    std::vector<float> _h;
+    std::vector<float> _c;
 
-    std::shared_ptr<Denoiser> denoiser_ = nullptr;
-    std::shared_ptr<Resampler> resampler_ = nullptr;
-    std::shared_ptr<SampleQueue> sample_queue_ = nullptr;
+    std::shared_ptr<Denoiser> _denoiser = nullptr;
+    std::shared_ptr<Resampler> _resampler = nullptr;
+    std::shared_ptr<SampleQueue> _sample_queue = nullptr;
 };
 
 #endif  // VAD_VAD_MODEL_H_
