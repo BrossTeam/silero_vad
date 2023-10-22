@@ -17,6 +17,7 @@ int dataset_test()
 }
 
 int main(int argc, char* argv[]) {
+    /*
     gflags::ParseCommandLineFlags(&argc, &argv, false);
     google::InitGoogleLogging(argv[0]);
 
@@ -48,4 +49,5 @@ int main(int argc, char* argv[]) {
         std::cout << "[" << start_pos[i] << ", " << stop_pos[i] << "]s"
                   << "\n";
     }
+    */
 }
